@@ -6,7 +6,8 @@
  *
  * 叫醒 Coo(flush)的只有:每天第一次回到电脑前、离开够久后回来、连续在电脑前满一段、专注时段里停在
  * 要避开的内容上、专注时段结束、日程快开始;离开和状态变化随下一批事件送达(piggyback)。安静时段与
- * 「少打扰」档把前四种也改成随下一批送达。日程提醒与专注时段结束不受这两项影响。
+ * 「少打扰」档把前四种也改成随下一批送达;专注时段进行中或日历上此刻有日程时，回来与连续在电脑前
+ * 也随下一批送达，正文写明是哪个时段或日程。日程提醒与专注时段结束不受这些影响。
  *
  * 窗口标题与日历文字是外部内容,事件按 external 推送;只有读取器本身的状态变化是 internal。
  */
@@ -199,6 +200,7 @@ export class CoworkWorld implements World {
     const t = this.t;
     const normal = this.cfg.proactivity !== 'low';
     const quiet = this.quiet(now);
+    const busy = this.busy(now);
     switch (s.kind) {
       case 'back': {
         const gapMin = Math.round((s.at - s.since) / MIN);
@@ -210,7 +212,7 @@ export class CoworkWorld implements World {
           lines.push(this.todayCalendarLine(now));
           await this.push('day-start', this.stamp(now, true) + lines.join('\n'), !quiet, now);
         } else {
-          await this.push('back', this.stamp(now) + t.back(hm(this.tz, s.since), gapMin), normal && !quiet && gapMin >= this.cfg.activity.backWakeMinutes, now);
+          await this.push('back', this.stamp(now) + t.back(hm(this.tz, s.since), gapMin) + (busy?.text ?? ''), normal && !quiet && !busy && gapMin >= this.cfg.activity.backWakeMinutes, now);
         }
         return;
       }
@@ -218,7 +220,7 @@ export class CoworkWorld implements World {
         await this.push('away', this.stamp(s.since) + t.away(hm(this.tz, s.since), { app: s.app, title: s.title }), false, now);
         return;
       case 'stretch':
-        await this.push('stretch', this.stamp(now) + t.stretch(hm(this.tz, s.since), s.minutes, this.cfg.activity.awayMinutes), normal && !quiet, now);
+        await this.push('stretch', this.stamp(now) + t.stretch(hm(this.tz, s.since), s.minutes, this.cfg.activity.awayMinutes) + (busy?.text ?? ''), normal && !quiet && !busy, now);
         return;
       case 'drift':
         await this.push('drift', this.stamp(now) + t.drift(s.focus.goal, Math.round((now - s.focus.startedAt) / MIN), (now - s.since) / 1000, { app: s.app, title: s.title }, s.matched), !quiet, now);
@@ -230,6 +232,14 @@ export class CoworkWorld implements World {
         return;
       }
     }
+  }
+
+  /** 进行中的专注时段或日历上此刻的日程(不含全天);有则回报它的一句事实。 */
+  private busy(now: number): { text: string } | null {
+    const f = this.activity.focus();
+    if (f) return { text: this.t.busyFocus(f.goal) };
+    const o = this.upcoming(now, now + 1)?.list.find((x) => !x.allDay && x.start <= now && x.end > now);
+    return o ? { text: this.t.busyMeeting(o.summary, this.range(o)) } : null;
   }
 
   /** 最近一个有记录、早于今天的日子的概要;没有则 null。 */

@@ -15,7 +15,7 @@ const zh = {
 
   dayStart: (last: string | null, gapMin: number | null) => `[cowork] 今天第一次看到使用者在电脑前。${last ? `上次看到活动是 ${last}${gapMin !== null ? `,隔了 ${duration(gapMin, 'zh')}` : ''}。` : '这是第一次记录。'}`,
   yesterday: (date: string, span: string, activeMin: number, apps: string, focus: string) => `前一个有记录的日子(${date}):${span},在电脑前共 ${duration(activeMin, 'zh')}${apps ? `,用得最多:${apps}` : ''}${focus ? `;专注时段:${focus}` : ''}。`,
-  todayCalendar: (lines: string) => `今天日历上:${lines}`,
+  todayCalendar: (lines: string) => `今天日历上:${lines}。`,
   todayCalendarNone: '今天日历上没有日程。',
   back: (since: string, min: number) => `[cowork] 使用者回到电脑前,离开了 ${duration(min, 'zh')}(${since} 起没有键鼠操作)。`,
   away: (since: string, a: AppLine) => `[cowork] 使用者 ${since} 起没有动键盘和鼠标,离开时前台是 ${zhApp(a)}。`,
@@ -25,6 +25,8 @@ const zh = {
   meetingSoon: (inMin: number, range: string, summary: string, location: string) => `[cowork] 日历:${inMin <= 0 ? '现在' : `${inMin} 分钟后`}(${range})「${summary || '无标题'}」${location ? `,地点 ${location}` : ''}。`,
   sensorDown: (why: string) => `[cowork] 读不到前台窗口和键鼠活动了(${why})。离开、回来、连续在电脑前这些事件暂停,专注时段只按时间结束。`,
   sensorUp: '[cowork] 又能读到前台窗口和键鼠活动了。',
+  busyMeeting: (summary: string, range: string) => `日历上此刻是「${summary || '无标题'}」(${range})。`,
+  busyFocus: (goal: string) => `专注时段「${goal}」进行中。`,
   calendarFailed: (why: string) => `[cowork] 日历没读成(${why}),日程提醒暂停,修好后自动恢复。`,
 
   // 回执
@@ -85,7 +87,7 @@ const en: typeof zh = {
 
   dayStart: (last, gapMin) => `[cowork] First time today the person is at the computer. ${last ? `Activity was last seen at ${last}${gapMin !== null ? `, ${duration(gapMin, 'en')} ago` : ''}.` : 'This is the first record.'}`,
   yesterday: (date, span, activeMin, apps, focus) => `Previous day on record (${date}): ${span}, ${duration(activeMin, 'en')} at the computer${apps ? `; most used: ${apps}` : ''}${focus ? `; focus sessions: ${focus}` : ''}.`,
-  todayCalendar: (lines) => `On today's calendar: ${lines}`,
+  todayCalendar: (lines) => `On today's calendar: ${lines}.`,
   todayCalendarNone: 'Nothing on today\'s calendar.',
   back: (since, min) => `[cowork] The person is back at the computer after ${duration(min, 'en')} away (no input since ${since}).`,
   away: (since, a) => `[cowork] No keyboard or mouse input from the person since ${since}; the foreground was ${enApp(a)}.`,
@@ -95,6 +97,8 @@ const en: typeof zh = {
   meetingSoon: (inMin, range, summary, location) => `[cowork] Calendar: ${inMin <= 0 ? 'now' : `in ${inMin} min`} (${range}) "${summary || 'untitled'}"${location ? `, at ${location}` : ''}.`,
   sensorDown: (why) => `[cowork] The foreground window and input activity can no longer be read (${why}). Away, back and stretch events are paused; focus sessions end by time only.`,
   sensorUp: '[cowork] The foreground window and input activity can be read again.',
+  busyMeeting: (summary, range) => `On the calendar now: "${summary || 'untitled'}" (${range}).`,
+  busyFocus: (goal) => `Focus session "${goal}" is running.`,
   calendarFailed: (why) => `[cowork] The calendar could not be read (${why}); calendar reminders are paused until it reads again.`,
 
   nowLine: (a, idleSec) => `Foreground: ${enApp(a)}; ${idleSec < 60 ? 'input just now' : `no input for ${duration(idleSec / 60, 'en')}`}.`,

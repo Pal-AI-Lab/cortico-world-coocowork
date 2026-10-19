@@ -21,7 +21,11 @@
     "kind": "world",
     "api": 6,
     "displayName": "CooCowork",
-    "tags": [],
+    "tags": [
+      "companion",
+      "sensitive-data",
+      "experimental"
+    ],
     "describe": "describe.json"
   },
   "files": [
