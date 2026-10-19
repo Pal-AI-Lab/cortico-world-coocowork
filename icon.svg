@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="CooCowork">
+  <title>CooCowork</title>
+  <rect width="256" height="256" rx="56" fill="#F4F5F4"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="58" y="70" width="140" height="128" rx="22" stroke="#1B1626" stroke-width="22"/>
+    <path stroke="#1B1626" stroke-width="22" d="M96 54V82M160 54V82"/>
+    <path stroke="#00A870" stroke-width="18" d="M98 140L120 162L160 118"/>
+  </g>
+</svg>
