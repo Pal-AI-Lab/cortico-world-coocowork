@@ -4,23 +4,23 @@ import type { ToolDef } from 'cortico/core/types.ts';
 export const COWORK_TOOL_DECLS: ReadonlyArray<Omit<ToolDef, 'handler'>> = [
   {
     name: 'cowork_now',
-    description: 'What is true right now: the foreground program and window title, how long since the last keyboard or mouse input, how long the person has been at the computer, the running focus session, and the next calendar events.',
+    description: 'What is true right now: foreground program and window title, time since last input, time at the computer, active focus session, and upcoming calendar events.',
     tags: ['read'],
     parameters: { type: 'object', additionalProperties: false, properties: {} },
   },
   {
     name: 'cowork_focus_start',
-    description: 'Start a focus session with the person: they work on one thing for a set time while you keep them company. When it ends you get an event with what the computer showed during it. If they name programs or sites to stay away from, pass them as avoid; you are told when the foreground stays on one of them. Start one only when the person has said what they are about to do.',
+    description: 'Start a focus session to keep the person company while they work for a set time. Call only after the person states what they will work on. An event arrives if the foreground stays on items in avoid. Session statistics arrive in cowork.focus-ended when it finishes.',
     tags: ['write'],
     parameters: {
       type: 'object',
       additionalProperties: false,
       properties: {
         goal: { type: 'string', maxLength: 120, description: 'What the person is working on, in their words.' },
-        minutes: { type: 'integer', minimum: 5, maximum: 240, description: 'Length of the session.' },
+        minutes: { type: 'integer', minimum: 5, maximum: 240, description: 'Length of the session in minutes.' },
         avoid: {
           type: 'array', maxItems: 10, items: { type: 'string', maxLength: 40 },
-          description: 'Program names or words in window titles the person wants to stay away from, such as "bilibili" or "steam.exe". Matched case-insensitively.',
+          description: 'Program names or words in window titles to stay away from, such as "bilibili" or "steam.exe". Case-insensitive.',
         },
       },
       required: ['goal', 'minutes'],
@@ -34,32 +34,32 @@ export const COWORK_TOOL_DECLS: ReadonlyArray<Omit<ToolDef, 'handler'>> = [
   },
   {
     name: 'cowork_day',
-    description: 'The record of one day: when the person was first and last at the computer, time at it, breaks, the programs and window titles used most, and focus sessions. Use it to look back on a day with the person or to remember what they were working on.',
+    description: 'Activity record of one day: first and last presence at the computer, active time, breaks, top programs and window titles, and focus sessions. Use it to review a day or recall what the person worked on.',
     tags: ['read'],
     parameters: {
       type: 'object',
       additionalProperties: false,
-      properties: { date: { type: 'string', description: 'YYYY-MM-DD, today or yesterday. Default today.' } },
+      properties: { date: { type: 'string', description: 'YYYY-MM-DD, today, or yesterday. Default today.' } },
     },
   },
   {
     name: 'cowork_calendar',
-    description: 'Calendar events from the person\'s calendar, in their local time.',
+    description: 'Events on the person\'s calendar from the start of today, in their local time.',
     tags: ['read'],
     parameters: {
       type: 'object',
       additionalProperties: false,
-      properties: { days: { type: 'integer', minimum: 1, maximum: 14, description: 'How many days from today. Default 1.' } },
+      properties: { days: { type: 'integer', minimum: 1, maximum: 14, description: 'How many days to look ahead from today. Default 1.' } },
     },
   },
   {
     name: 'cowork_forget',
-    description: 'Delete activity records for good: one day\'s, or all of them. Use it when the person asks you to forget what their computer showed. It does not touch your own notes.',
+    description: 'Permanently delete computer activity records for one day or all days. Does not modify your notes.',
     tags: ['write'],
     parameters: {
       type: 'object',
       additionalProperties: false,
-      properties: { date: { type: 'string', description: 'YYYY-MM-DD, today or all.' } },
+      properties: { date: { type: 'string', description: 'YYYY-MM-DD, today, or all.' } },
       required: ['date'],
     },
   },
