@@ -1,6 +1,6 @@
 {
   "name": "cortico-world-coocowork",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Cortico World for Coopanion: Coo keeps you company while you work, with the activity, focus sessions and calendar it can see",
   "license": "MIT",
@@ -21,6 +21,7 @@
     "kind": "world",
     "api": 6,
     "displayName": "CooCowork",
+    "icon": "icon.svg",
     "tags": [
       "companion",
       "sensitive-data",
@@ -32,6 +33,7 @@
   },
   "files": [
     "src",
+    "icon.svg",
     "dist",
     "README.md",
     "CHANGELOG.md",
