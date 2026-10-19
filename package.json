@@ -1,0 +1,56 @@
+{
+  "name": "cortico-world-coocowork",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Cortico World for Coopanion: Coo keeps you company while you work, with the activity, focus sessions and calendar it can see",
+  "license": "MIT",
+  "keywords": [
+    "cortico-world",
+    "cortico",
+    "coopanion",
+    "productivity",
+    "focus",
+    "calendar"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.5.0",
+  "main": "./src/index.ts",
+  "cortico": {
+    "kind": "world",
+    "api": 6,
+    "displayName": "CooCowork",
+    "tags": [],
+    "describe": "describe.json"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "describe.json"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "cortico": "^0.2.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "author": "Phantivia",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pal-AI-Lab/cortico-world-coocowork.git"
+  },
+  "os": [
+    "win32"
+  ],
+  "dependencies": {
+    "koffi": "3.3.1"
+  }
+}
