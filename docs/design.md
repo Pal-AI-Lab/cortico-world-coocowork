@@ -23,7 +23,8 @@ probe.ts ──采样──▶ activity.ts ──Signal──▶ world.ts ──
 | `activity.ts` | 采样折成离开、回来、连续在电脑前、专注时段的信号和按天的停留段;不读时钟、不碰磁盘,测试直接喂时刻 |
 | `daylog.ts` | 按本地日期分文件的 JSONL,跨午夜切开;`state.json` 存重启后接着用的状态;按天概要 |
 | `calendar.ts` | .ics 解析;RRULE 的 DAILY/WEEKLY/MONTHLY/YEARLY、BYDAY(含 -1FR)、BYMONTHDAY、COUNT、UNTIL、EXDATE、RECURRENCE-ID;TZID 认 IANA 和常见 Windows 名 |
-| `world.ts` | 每拍采样、推事件、日程提醒、按间隔重读日历;六个工具;WebUI 的配置组、状态灯、存储清除、环境提示词 |
+| `world.ts` | 每拍采样、推事件、日程提醒、按间隔重读日历;六个工具;WebUI 的配置组、状态灯、存储清除、环境提示词、「常用设置」面板的数据面 |
+| `webui/` | 「常用设置」面板(浏览器端,打包成 `dist/webui.js`):日历接入、主动程度、安静时段、隐私与记录 |
 
 ## 事件
 
@@ -58,7 +59,7 @@ probe.ts ──采样──▶ activity.ts ──Signal──▶ world.ts ──
 
 ## 配置
 
-`worlds.cowork` 段,全部热改,高级模式的 World 页渲染成表单。
+`worlds.cowork` 段,全部热改。高级模式的 World 页有两处:「常用设置」面板放常改的几项,用分段按钮、开关、时间框和程序名标签当场写回;「配置」页是框架按 schema 渲染的完整表单。
 
 | 键 | 默认 | |
 |---|---|---|
@@ -70,7 +71,7 @@ probe.ts ──采样──▶ activity.ts ──Signal──▶ world.ts ──
 | `activity.privateApps` | 密码管理器与微信、QQ、Telegram、WhatsApp、Signal | 逗号分隔的可执行文件名 |
 | `activity.keepDays` | 14 | |
 | `focus.nudgeSec` | 120 | |
-| `calendar.file` / `remindMinutes` / `refreshMinutes` | 空 / 10 / 30 | 订阅地址是密钥 `COWORK_CALENDAR_URL`,写部署 `.env`,经 `ctx.secret()` 读 |
+| `calendar.file` / `remindMinutes` / `refreshMinutes` | 空 / 10 / 30 | 订阅地址是密钥 `COWORK_CALENDAR_URL`:「常用设置」里粘贴、测试、保存,经 `ctx.storeSecret()` 写部署 `.env`;页面只拿到打码的主机名加末尾 6 位 |
 | `quietHours.from` / `to` | 空 | HH:MM,可跨午夜 |
 
 ## 数据
@@ -95,7 +96,7 @@ WebUI 的 World 数据页签可以一键清除活动记录(`storage`)。
 
 ## 已知局限与后续
 
-1. 订阅地址只能手写进 `.env`,扩展安装时 pnpm 还会把 koffi 记成待定的构建脚本(`allowBuilds: koffi`),要看 Coopanion 的扩展页怎么呈现这一项。普通使用者需要一个填写入口:高级模式的 World 面板加一个保存密钥的输入框(`ctx.storeSecret`),或由 Coopanion 提供。
+1. 扩展安装时 pnpm 会把 koffi 记成待定的构建脚本(`allowBuilds: koffi`),要看 Coopanion 的扩展页怎么呈现这一项;koffi 不跑构建脚本也能用。
 2. 只在 Windows 上读前台窗口与空闲;macOS 要另写 probe。
 3. 全屏视频、语音会议时键鼠不动,会被算成离开。可以加「前台是全屏窗口时不算离开」或读音频会话状态,先观察真实使用再定。
 4. 装进 Coopanion 只验证了无界面的一半:打成 tgz、按扩展目录的方式 `pnpm add`(koffi 的构建脚本被跳过也能用,它走预编译包),再用 Coopanion 自带的 Cortico 装配 Cormini 加载挂载,前缀里 CooCowork 一段 1363 字,前台窗口读取为「开着」(脚本在 `Coopanion/scratch/coocowork/`)。还没在 Electron 应用里看过:事件在对话页的样子、和桌宠环境提示词放在一起时 Coo 的反应。

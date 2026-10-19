@@ -1,0 +1,19 @@
+.cw-block { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cw-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.cw-row[hidden], .cw-block[hidden] { display: none; }
+.cw-url { flex: 1 1 320px; min-width: 0; }
+.cw-masked, .cw-path { overflow-wrap: anywhere; }
+.cw-note { font-size: 12px; opacity: .72; }
+.cw-test:empty { display: none; }
+.cw-help summary { cursor: pointer; font-size: 12px; opacity: .8; }
+.cw-help ul { margin: 6px 0 4px; padding-left: 18px; font-size: 12px; line-height: 1.6; }
+.cw-upcoming { display: flex; flex-direction: column; gap: 2px; }
+.cw-event { display: flex; gap: 12px; font-size: 13px; }
+.cw-when { flex: 0 0 auto; opacity: .8; }
+.cw-time { width: 10em; }
+.cw-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cw-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 10px; border: 1px solid currentColor; border-radius: 999px; font-size: 12px; opacity: .9; }
+.cw-chip-x { border: 0; background: none; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 4px; opacity: .7; }
+.cw-chip-x:hover { opacity: 1; }
+.cw-app-input { flex: 0 1 240px; }
+.cw-seen .btn { font-family: inherit; }

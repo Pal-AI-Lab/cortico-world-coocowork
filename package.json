@@ -26,25 +26,31 @@
       "sensitive-data",
       "experimental"
     ],
-    "describe": "describe.json"
+    "describe": "describe.json",
+    "webUiClient": "dist/webui.js",
+    "webUiStyle": "dist/webui.css"
   },
   "files": [
     "src",
+    "dist",
     "README.md",
     "CHANGELOG.md",
     "LICENSE",
     "describe.json"
   ],
   "scripts": {
+    "build": "node scripts/build-webui.mjs",
+    "prepack": "node scripts/build-webui.mjs",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.web.json"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "cortico": "^0.2.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "esbuild": "^0.28.2"
   },
   "author": "Phantivia",
   "repository": {
@@ -56,5 +62,9 @@
   ],
   "dependencies": {
     "koffi": "3.3.1"
+  },
+  "homepage": "https://github.com/Pal-AI-Lab/cortico-world-coocowork#readme",
+  "bugs": {
+    "url": "https://github.com/Pal-AI-Lab/cortico-world-coocowork/issues"
   }
 }

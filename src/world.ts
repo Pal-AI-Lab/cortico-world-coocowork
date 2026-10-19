@@ -6,8 +6,8 @@
  *
  * 叫醒 Coo(flush)的只有:每天第一次回到电脑前、离开够久后回来、连续在电脑前满一段、专注时段里停在
  * 要避开的内容上、专注时段结束、日程快开始;离开和状态变化随下一批事件送达(piggyback)。安静时段与
- * 「少打扰」档把前四种也改成随下一批送达;专注时段进行中或日历上此刻有日程时，回来与连续在电脑前
- * 也随下一批送达，正文写明是哪个时段或日程。日程提醒与专注时段结束不受这些影响。
+ * 「少打扰」档把前四种也改成随下一批送达;专注时段进行中或日历上此刻有日程时,回来与连续在电脑前
+ * 也随下一批送达,正文写明是哪个时段或日程。日程提醒与专注时段结束不受这些影响。
  *
  * 窗口标题与日历文字是外部内容,事件按 external 推送;只有读取器本身的状态变化是 internal。
  */
@@ -25,6 +25,7 @@ import { DayLog, summarize } from './daylog.ts';
 import { MODEL_TEXT, type ModelText } from './model-text.ts';
 import { createProbe, type Probe } from './probe.ts';
 import { COWORK_TOOL_DECLS } from './tools.ts';
+import { SETUP_PANEL, type CalendarItem, type CalendarProbe, type PanelState } from './panel-state.ts';
 
 const ENV_PROMPT_FILES = {
   zh: fileURLToPath(new URL('./ENV_PROMPT.md', import.meta.url)),
@@ -46,6 +47,8 @@ export interface CoworkWorldOptions {
   dataDir: string;
   /** 订阅日历的地址;空串为没有。 */
   calendarUrl: () => string;
+  /** 把订阅地址写进部署 `.env`;空串为移除。 */
+  storeCalendarUrl?: (url: string) => void;
   probe?: () => Promise<Probe | null>;
   now?: () => number;
   fetchText?: (url: string) => Promise<string>;
@@ -468,6 +471,107 @@ export class CoworkWorld implements World {
     return n ? t.forgot(n, what) : t.forgotNone(what);
   }
 
+  // ---------------------------------------------------------------- 「常用设置」面板
+
+  async invoke(panel: string, method: string, args: unknown[]): Promise<unknown> {
+    if (panel !== SETUP_PANEL) throw new Error(`unknown panel ${panel}`);
+    const zh = args.at(-1) !== 'en';
+    switch (method) {
+      case 'state': return this.panelState(zh);
+      case 'testCalendar': return this.testCalendar(String(args[0] ?? ''), zh);
+      case 'saveCalendarUrl': {
+        const url = normalizeUrl(String(args[0] ?? ''));
+        if (!url) throw new Error(zh ? '地址要以 https://、http:// 或 webcal:// 开头' : 'The address must start with https://, http:// or webcal://');
+        this.opts.storeCalendarUrl?.(url);
+        this.calendar.readAt = null;
+        await this.refreshCalendar();
+        return this.panelState(zh);
+      }
+      case 'removeCalendarUrl':
+        this.opts.storeCalendarUrl?.('');
+        this.calendar.readAt = null;
+        await this.refreshCalendar();
+        return this.panelState(zh);
+      case 'refreshCalendar':
+        await this.refreshCalendar();
+        return this.panelState(zh);
+      case 'forget': {
+        const date = args[0] === 'all' ? 'all' : dateKey(this.tz, this.clock());
+        this.days.forget(date);
+        if (date === 'all' || date === dateKey(this.tz, this.clock())) this.activity.flush(this.clock());
+        return this.panelState(zh);
+      }
+      default: throw new Error(`unknown method ${method}`);
+    }
+  }
+
+  private items(list: readonly Occurrence[], zh: boolean): CalendarItem[] {
+    const dow = (zh ? MODEL_TEXT.zh : MODEL_TEXT.en).dow;
+    return list.map((o) => {
+      const p = localParts(this.tz, o.start);
+      const day = `${mdhm(this.tz, o.start).slice(0, 5)} ${dow[p.dow]}`;
+      return { when: `${day} ${o.allDay ? (zh ? '全天' : 'all day') : `${hm(this.tz, o.start)}–${hm(this.tz, o.end)}`}`, summary: o.summary };
+    });
+  }
+
+  private async testCalendar(raw: string, zh: boolean): Promise<CalendarProbe> {
+    const url = normalizeUrl(raw);
+    if (!url) return { ok: false, error: zh ? '地址要以 https://、http:// 或 webcal:// 开头' : 'The address must start with https://, http:// or webcal://' };
+    try {
+      const parsed = parseIcs(await (this.opts.fetchText ?? fetchText)(url));
+      if (!parsed.events.length) return { ok: false, error: zh ? '读到了内容,但里面没有日程;请确认是 iCal(.ics)地址' : 'The address returned no events; check that it is an iCal (.ics) address' };
+      const now = this.clock();
+      const got = occurrences(parsed, this.tz, now, startOfDay(this.tz, now) + 7 * DAY);
+      return { ok: true, count: got.list.length, upcoming: this.items(got.list.slice(0, 5), zh) };
+    } catch (err) {
+      return { ok: false, error: String((err as Error)?.message ?? err) };
+    }
+  }
+
+  panelState(zh = true): PanelState {
+    const now = this.clock();
+    const today = this.days ? this.todaySummary(now) : null;
+    const privateApps = splitApps(this.cfg.activity.privateApps);
+    const hidden = new Set(privateApps.map((a) => a.toLowerCase()));
+    const f = this.activity?.focus() ?? null;
+    const url = this.opts.calendarUrl().trim();
+    const got = this.upcoming(now, startOfDay(this.tz, now) + 7 * DAY);
+    const notes = got ? [
+      ...(got.unsupported.length ? [this.t.calUnsupported(got.unsupported.join('; '))] : []),
+      ...(got.unknownZones.length ? [this.t.calZones(got.unknownZones.join(', '))] : []),
+    ] : [];
+    return {
+      activity: {
+        enabled: this.cfg.activity.enabled,
+        available: !!this.probe,
+        error: this.sensorOk === false ? (zh ? '读取失败' : 'reading failed') : null,
+        todayMin: today?.activeMin ?? 0,
+        seenApps: (today?.apps ?? []).map((a) => a.app).filter((a) => a !== '?' && !hidden.has(a.toLowerCase())).slice(0, 8),
+      },
+      focus: f ? { goal: f.goal, leftMin: Math.max(0, Math.round((f.endsAt - now) / MIN)) } : null,
+      calendar: {
+        url: url ? maskUrl(url) : null,
+        file: this.cfg.calendar.file,
+        error: this.calendar.error,
+        readAt: this.calendar.readAt === null ? null : mdhm(this.tz, this.calendar.readAt),
+        upcoming: got ? this.items(got.list.filter((o) => o.end > now).slice(0, 8), zh) : [],
+        notes,
+      },
+      settings: {
+        proactivity: this.cfg.proactivity,
+        quietFrom: this.cfg.quietHours.from,
+        quietTo: this.cfg.quietHours.to,
+        stretchMinutes: this.cfg.activity.stretchMinutes,
+        backWakeMinutes: this.cfg.activity.backWakeMinutes,
+        remindMinutes: this.cfg.calendar.remindMinutes,
+        titles: this.cfg.activity.titles,
+        privateApps,
+        keepDays: this.cfg.activity.keepDays,
+      },
+      records: this.days ? { days: this.days.dates().length, kb: Math.round(this.days.bytes() / 1024) } : { days: 0, kb: 0 },
+    };
+  }
+
   // ---------------------------------------------------------------- WebUI
 
   webUi(language: Language = 'zh'): WorldWebUiDecl {
@@ -482,6 +586,8 @@ export class CoworkWorld implements World {
         state: this.calendar.error ? 'error' : this.calendar.parsed ? 'online' : 'offline',
         hint: this.calendar.error ?? undefined,
       }],
+      panels: [{ id: SETUP_PANEL, title: zh ? '常用设置' : 'Quick settings', description: zh ? '日历、主动程度、安静时段与隐私。' : 'Calendar, proactivity, quiet hours and privacy.', getMethods: ['state'] }],
+      invoke: (panel, method, args) => this.invoke(panel, method, [...args, zh ? 'zh' : 'en']),
       config: configGroups(language),
       storage: this.days ? [{
         key: 'cowork.days',
@@ -509,8 +615,41 @@ export class CoworkWorld implements World {
   }
 }
 
+/** 订阅地址:webcal:// 换成 https://;不是 http(s) 地址时为 null。 */
+export function normalizeUrl(raw: string): string | null {
+  const url = raw.trim().replace(/^webcal:\/\//i, 'https://');
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' || u.protocol === 'http:' ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 只露主机名和末尾 6 位,私密地址里的令牌不回给页面。 */
+export function maskUrl(url: string): string {
+  try {
+    const u = new URL(url.replace(/^webcal:\/\//i, 'https://'));
+    return `${u.host}/…${url.slice(-6)}`;
+  } catch {
+    return `…${url.slice(-6)}`;
+  }
+}
+
+export function splitApps(text: string): string[] {
+  return text.split(',').map((a) => a.trim()).filter(Boolean);
+}
+
+/** 取订阅地址的内容;失败时的消息带主机名与底层错误码(如 ENOTFOUND、ECONNREFUSED),不带地址里的令牌。 */
 async function fetchText(url: string): Promise<string> {
-  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), headers: { accept: 'text/calendar, */*' } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const host = new URL(url).host;
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), headers: { accept: 'text/calendar, */*' } });
+  } catch (err) {
+    const e = err as Error & { cause?: { code?: string; message?: string } };
+    throw new Error(`${host}: ${e.name === 'TimeoutError' ? 'timeout' : e.cause?.code ?? e.cause?.message ?? e.message}`);
+  }
+  if (!res.ok) throw new Error(`${host}: HTTP ${res.status}`);
   return res.text();
 }

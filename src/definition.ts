@@ -18,6 +18,7 @@ export const COWORK: WorldDefinition<CoworkConfigSection> = {
     timezone: ctx.timezone,
     dataDir: ctx.dataDir,
     calendarUrl: () => ctx.secret(CALENDAR_URL_SECRET),
+    storeCalendarUrl: (url) => ctx.storeSecret(CALENDAR_URL_SECRET, url),
   }),
   describe: {
     tools: describeTools(COWORK_TOOL_DECLS, {
