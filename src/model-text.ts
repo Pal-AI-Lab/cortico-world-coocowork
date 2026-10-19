@@ -41,7 +41,7 @@ const zh = {
   sensorMissing: '这台电脑上读不到前台窗口和键鼠活动。',
 
   focusStarted: (goal: string, until: string, avoid: string) => `专注时段「${goal}」开始了,到 ${until} 结束${avoid ? `;前台停在 ${avoid} 上超过设定时长会告诉你` : ''}。结束时你会收到一条事件。`,
-  focusBusy: (goal: string, until: string) => `[cowork_focus_start 没执行] 已经有一个专注时段「${goal}」进行中(到 ${until})。先 cowork_focus_stop 再开新的。`,
+  focusBusy: (goal: string, until: string) => `[cowork_focus_start 没执行] 已经有一个专注时段「${goal}」进行中(到 ${until})。先结束它再开新的。`,
   focusBad: (why: string) => `[cowork_focus_start 没执行] ${why}`,
   minutesRange: 'minutes 要在 5 到 240 之间。',
   goalEmpty: 'goal 不能为空。',
@@ -112,7 +112,7 @@ const en: typeof zh = {
   sensorMissing: 'The foreground window and input activity cannot be read on this computer.',
 
   focusStarted: (goal, until, avoid) => `Focus session "${goal}" started; it ends at ${until}${avoid ? `. You will be told when the foreground stays on ${avoid} longer than the set time` : ''}. An event arrives when it ends.`,
-  focusBusy: (goal, until) => `[cowork_focus_start not run] Focus session "${goal}" is already running (until ${until}). cowork_focus_stop it first.`,
+  focusBusy: (goal, until) => `[cowork_focus_start not run] Focus session "${goal}" is already running (until ${until}). End it first.`,
   focusBad: (why) => `[cowork_focus_start not run] ${why}`,
   minutesRange: 'minutes must be from 5 to 240.',
   goalEmpty: 'goal must not be empty.',

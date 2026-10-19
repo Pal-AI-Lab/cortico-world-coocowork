@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { describeTools, type WorldDefinition } from 'cortico/world.ts';
 import { CALENDAR_URL_SECRET, COWORK_DEFAULTS, COWORK_ID, PROACTIVITY_OPTIONS, PROMPT_LANGUAGE_OPTIONS, proactivityOptions, promptLanguageOptions, type CoworkConfigSection } from './config.ts';
 import { COWORK_TOOL_DECLS } from './tools.ts';
@@ -16,7 +17,8 @@ export const COWORK: WorldDefinition<CoworkConfigSection> = {
   create: (ctx) => new CoworkWorld({
     cfg: ctx.cfg,
     timezone: ctx.timezone,
-    dataDir: ctx.dataDir,
+    // ctx.dataDir 是整个部署共用的数据目录
+    dataDir: join(ctx.dataDir, COWORK_ID),
     calendarUrl: () => ctx.secret(CALENDAR_URL_SECRET),
     storeCalendarUrl: (url) => ctx.storeSecret(CALENDAR_URL_SECRET, url),
   }),

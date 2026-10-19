@@ -76,7 +76,7 @@ probe.ts ──采样──▶ activity.ts ──Signal──▶ world.ts ──
 
 ## 数据
 
-`<dataDir>/` 下(Coopanion 里是 `<userData>/home/companion/data/` 一类位置,由 Cortico 的 `ctx.dataDir` 决定):
+部署数据目录(`ctx.dataDir`,Coopanion 里是 `<userData>/home/companion/data/`)下的 `cowork/` 里:
 
 - `days/YYYY-MM-DD.jsonl`:`{k:'seg',from,to,app,title}`、`{k:'away',from,to}`、`{k:'focus',...,stats}`,一行一条。一整天大约几百行、几十 KB。
 - `days/state.json`:最后一次活动时刻、这一轮的起点、进行中的专注时段。
